@@ -28,8 +28,8 @@ export default class CommentModel extends Observable {
     try {
       const response = await this.#commentsApiService.addComment(update);
       this.#comments = [response, ...this.#comments];
-      this._notify(updateType, response);
 
+      this._notify(updateType, response);
     } catch (err) {
       throw new Error('Can\'t add comment');
     }

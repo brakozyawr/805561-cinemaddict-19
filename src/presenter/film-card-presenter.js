@@ -7,6 +7,7 @@ import CommentsApiService from '../comments-api-service';
 
 
 const bodyElement = document.body;
+//const isActive = false;
 
 export default class FilmCardPresenter {
   #commentModel = new CommentModel({
@@ -14,11 +15,13 @@ export default class FilmCardPresenter {
   });
 
   #filmsModel = null;
+  #film = null;
   #handleDataChange = null;
   #popupPresenter = null;
   #filmsListContainer = null;
   #filmComponent = null;
   #handlePopupChange = null;
+  #PopupPresenterList = new Map();
 
   constructor({filmsListContainer, onDataChange, onPopupChange, filmsModel }) {
     this.#filmsListContainer = filmsListContainer;
@@ -27,10 +30,49 @@ export default class FilmCardPresenter {
     this.#filmsModel = filmsModel;
 
     this.#filmsModel.addObserver(this.#handleModelEvent);
+    //this.#filmsModel.addObserver(console.log(`обновилась filmsModel в FilmCardPresenter` ));
   }
 
+  #rerenderpopup = () => {
+    if (this.#film){
+      console.log('перерисуем попап');
+      console.log(this.#film);
+      this.#PopupPresenterList.forEach((presenter) => presenter.destroy());
+      this.#PopupPresenterList.forEach((presenter) => presenter.closePopup());
+
+      this.#popupChangeHendler();
+      //this.#PopupPresenterList.clear();
+      this.removePopup();
+      //this.#popupPresenter.destroy();
+      const newFilm = this.#filmsModel.films.find((ithem) =>Number(ithem.id) === Number(this.#film.id));
+      console.log(newFilm);
+      this.#popupPresenter.init(newFilm).rerenderpopupFilmContainer();
+      //this.#popupPresenter.rerenderpopupFilmContainer();
+      //bodyElement.classList.add('hide-overflow');
+      //this.#film = null;
+    }
+  };
+
+  #clearPopupPresenterList= () =>{
+    this.#PopupPresenterList.forEach((presenter) => presenter.destroy());
+    this.#PopupPresenterList.forEach((presenter) => presenter.closePopup());
+    this.#PopupPresenterList.clear();
+    //this.#popupChangeHendler();
+  }
+
+  #handleModelEvent = (updateType, data) => {
+    //console.log('обновилась filmsModel в films-presenter' );
+    switch (updateType) {
+      case UpdateType.MAJOR:
+        this.#rerenderpopup();
+        break;
+    }
+  };
+
   #openPopup = (film) => {
-    this.#popupChangeHendler();
+    this.#film = film;
+    this.#clearPopupPresenterList();
+    this.#popupChangeHendler();//закрывает открытые ранее попапы, очищает список FilmCardPresenter методом removePopup
     this.#popupPresenter.init(film);
     bodyElement.classList.add('hide-overflow');
   };
@@ -45,9 +87,10 @@ export default class FilmCardPresenter {
     this.#popupPresenter = new PopupPresenter({
       popupContainer: bodyElement,
       commentModel: this.#commentModel,
-      onDataChange: this.#handleViewAction,
       filmsModel: this.#filmsModel,
+      clearPopupPresenterList: this.#clearPopupPresenterList
     });
+    this.#PopupPresenterList.set(film.id, this.#popupPresenter);
 
     const prevFilmComponent = this.#filmComponent;
 
@@ -69,31 +112,6 @@ export default class FilmCardPresenter {
     }
 
     remove(prevFilmComponent);
-  };
-
-  #handleViewAction = (actionType, updateType, update) => {
-    switch (actionType) {
-      case UserAction.ADD_COMMENT:
-        this.#commentModel.addComment(updateType, update);
-        break;
-      case UserAction.DELETE_COMMENT:
-        this.#commentModel.deleteComment(updateType, update);
-        break;
-      case UserAction.UPDATE_FILM_CARD_DETAIL:
-        this.#filmsModel.updateFilm(updateType, update);
-        break;
-    }
-  };
-
-  #handleModelEvent = (updateType, ) => {
-    switch (updateType) {
-      case UpdateType.MINOR:
-        this.init();
-        break;
-      case UpdateType.MAJOR:
-        this.init();
-        break;
-    }
   };
 
   #handleFavoriteClick = (film) => {

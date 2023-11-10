@@ -196,14 +196,17 @@ export default class FilmsPresenter {
   };
 
   #handleViewAction = (actionType, updateType, update) => {
+    console.log(`handleViewAction ${ actionType}` );
     switch (actionType) {
       case UserAction.UPDATE_FILM_CARD:
         this.#filmsModel.updateFilm(updateType, update);
         break;
+
     }
   };
 
   #handleModelEvent = (updateType, data) => {
+    console.log(`обновилась filmsModel в films-presenter` );
     switch (updateType) {
       case UpdateType.PATCH:
         this.#filmCardPresenterList.get(data.id).init(data);
